@@ -3,6 +3,17 @@
   <h1>TwitterXDownload</h1>
 </div>
 
+<p align="center">
+  <!-- Keep these links. Translations will automatically update with the README. -->
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=de">Deutsch</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=es">Español</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=fr">français</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=ja">日本語</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=ko">한국어</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=pt">Português</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=ru">Русский</a> | 
+  <a href="https://www.readme-i18n.com/ezshine/twitterxdownload?lang=zh">中文</a>
+</p>
 
 TwitterXDownload is a powerful Twitter video downloader (not only video). And it's also a marketing tool that helps you republish the content efficiently. You can translate threads with one click. 
 
