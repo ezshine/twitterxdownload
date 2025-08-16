@@ -2,8 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 自定义 CSS 变量 - 紫色系 */
+:root {
+  --primary-color: #a855f7;      /* 浅色模式主色 - 紫色 */
+  --primary-hover: #9333ea;      /* 浅色模式悬停色 */
+  --background-color: #ffffff;
+  --foreground-color: #000000;
+  --text-muted: #6b7280;
+}
+
+/* 深色模式变量 - 紫色系 */
+.dark {
+  --primary-color: #c084fc;      /* 深色模式主色 - 浅紫色 */
+  --primary-hover: #a855f7;      /* 深色模式悬停色 */
+  --background-color: #0f172a;
+  --foreground-color: #ffffff;
+  --text-muted: #9ca3af;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background-color);
+  color: var(--foreground-color);
 }
 
 .page-container {
@@ -12,6 +32,23 @@ body {
 
 .section {
   @apply py-4;
+}
+
+/* 自定义主题样式 */
+.text-primary {
+  color: var(--primary-color);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.hover\:text-primary:hover {
+  color: var(--primary-hover);
+}
+
+.hover\:bg-primary:hover {
+  background-color: var(--primary-hover);
 }
 
 .article-content img, .article-content video{
