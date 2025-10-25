@@ -49,7 +49,12 @@ npm install
 cp .env.example .env.local
 ```
 
-4. Start the development server:
+4. Get an API Key from http://twitterxdownload.com/self-hosted , set it in the .env.local file.
+```bash
+API_KEY=your-api-key
+```
+
+5. Start the development server:
 ```bash
 npm run dev
 ```
