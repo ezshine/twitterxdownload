@@ -49,11 +49,6 @@ npm install
 cp .env.example .env.local
 ```
 
-```
-# MONGODB URI is required
-MONGODB_URI=your-mongodb-uri
-```
-
 4. Start the development server:
 ```bash
 npm run dev
@@ -109,8 +104,6 @@ it's perfect designed for SEO, so you can make money with AdSense easily.
 ## 🌟 Support
 
 If you find this project helpful, please consider giving it a star ⭐️
-
-For support, please contact me at Twitter: [@ezshine](https://x.com/intent/follow?screen_name=ezshine)
 
 ## 📄 License
 

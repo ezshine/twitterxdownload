@@ -30,7 +30,7 @@ export default function MyNavbar({ locale = 'en' }) {
         </Link>
       </NavbarBrand>
       <NavbarContent className="hidden md:flex gap-6" justify="center">
-        {process.env.NEXT_PUBLIC_SEARCH_ENABLED != 0 && <NavbarItem>
+        {process.env.NEXT_PUBLIC_USE_SEARCH != 0 && <NavbarItem>
           <Link color="foreground" href="/tweets">
           {t('Search Tweets')}
           </Link>
@@ -40,22 +40,8 @@ export default function MyNavbar({ locale = 'en' }) {
           {t('Downloader')}
           </Link>
         </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="https://github.com/ezshine/twitterxdownload" target="_blank">
-          {t('Self Hosted')}
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <FriendsLink locale={locale} />
-        </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end" className="hidden md:flex">
-        <NavbarItem>
-          <LanguageSwitcher locale={locale} />
-        </NavbarItem>
-        <NavbarItem>
-          <ThemeSwitcher />
-        </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end" className="md:hidden">
         <NavbarItem>

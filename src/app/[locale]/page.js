@@ -31,11 +31,15 @@ export default async function Home({ params: { locale } }) {
             redirect(`/downloader?url=${url}`);
           }} />
         </div>
-        {process.env.NEXT_PUBLIC_HOME_LISTING != 0 && (
+        {process.env.NEXT_PUBLIC_USE_HOT_CREATORS != 0 && (
         <>
           <div className="section">
             <HotCreators locale={locale} />
           </div>
+        </>
+        )}
+        {process.env.NEXT_PUBLIC_USE_HOT_TWEETS != 0 && (
+        <>
           <div className="section">
             <HotTweets locale={locale} />
           </div>

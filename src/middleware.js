@@ -5,10 +5,10 @@ export function middleware(request) {
   // 获取请求的路径
   const pathname = request.nextUrl.pathname;
   console.log('Current pathname:', pathname);
-
+  
   // 检查路径是否已经包含语言代码
   const pathnameHasLocale = Object.keys(locales).map(locale => `/${locale}`).some(
-    (localePath) => pathname.startsWith(localePath)
+    (localePath) => pathname.startsWith(localePath) && (pathname === localePath || pathname.startsWith(localePath + '/'))
   );
 
   if (pathnameHasLocale) {
@@ -26,7 +26,7 @@ export function middleware(request) {
     
     // 尝试从 referer URL 中提取语言
     const localeFromReferer = Object.keys(locales).find(locale => 
-      refererPathname.startsWith(`/${locale}`)
+      refererPathname.startsWith(`/${locale}/`) || refererPathname === `/${locale}`
     );
     
     if (localeFromReferer) {
@@ -77,6 +77,7 @@ export const config = {
     // - api 路由
     // - _next 内部路由
     // - 静态文件
-    '/((?!api|_next/static|_next/image|favicon.ico|ads.txt|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$).*)',
+    // - sitemap 相关文件
+    '/((?!api/|_next/|favicon.ico|ads.txt|robots.txt|sitemap|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff|woff2|ttf|eot)$).*)',
   ],
 }; 
