@@ -58,7 +58,7 @@ export default function MyFooter({ locale = 'en' }) {
                         <li><Link href="/privacy-policy" className="text-sm hover:text-primary">{t('Privacy Policy')}</Link></li>
                         <li><Link href="/terms-of-service" className="text-sm hover:text-primary">{t('Terms of Service')}</Link></li>
                         <li><Link href="/friends-link" className="text-sm hover:text-primary">{t('Friends Link')}</Link></li>
-                        <li><Link href="https://github.com/ezshine/twitterxdownload" className="text-sm hover:text-primary">{t('Self Hosted')}</Link></li>
+                        <li><Link href="https://github.com/ezshine/twitterxdownload" target='_blank' className="text-sm hover:text-primary">{t('Self Hosted')}</Link></li>
                     </ul>
                 </div>
             </div>

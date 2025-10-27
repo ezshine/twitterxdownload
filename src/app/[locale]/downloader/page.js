@@ -2,15 +2,16 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getTranslation, locales } from '@/lib/i18n';
 import Hero from '@/app/components/ui/Hero';
-import { useState, useEffect } from 'react';
-import { Link,Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,Button, Drawer, DrawerContent, DrawerBody, DrawerHeader, useDisclosure } from '@heroui/react';
+import { useState, useEffect, useRef } from 'react';
+import { addToast,Link,Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,Button, Drawer, DrawerContent, DrawerBody, DrawerHeader, useDisclosure } from '@heroui/react';
 import RePublishPanel from '@/app/components/ui/RePublishPanel';
-import { RiArrowDropDownLine } from "@remixicon/react";
+import { RiArrowDropDownLine,RiDownloadLine } from "@remixicon/react";
 import { parseTweetData } from '@/lib/parser';
 import TweetCard from '@/app/components/ui/TweetCard';
 import { translate } from '@/lib/translator';
 import ConfirmModal from '@/app/components/ui/ConfirmModal';
-import JSZip from 'jszip';
+import Script from 'next/script';
+import Utils from '@/lib/utils';
 
 export default function Downloader({ params: { locale } }) {
     const searchParams = useSearchParams();
@@ -27,17 +28,33 @@ export default function Downloader({ params: { locale } }) {
 
     const [isPackaging, setIsPackaging] = useState(false);
 
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const turnstileRef = useRef(null);
+
     const t = function (key) {
         return getTranslation(locale, key);
     }
 
     useEffect(() => {
         if(url) {
-            setIsLoading(true);
             fetchTweet(url);
         }
         fetchRemainApiCount();
+
+        // 监听 Turnstile 验证成功的全局事件
+        if(typeof window !== 'undefined') {
+            window.addEventListener('turnstile-success', handleTurnstileSuccess);
+            return () => {
+                window.removeEventListener('turnstile-success', handleTurnstileSuccess);
+            }
+        }
     }, []);
+
+    // Turnstile 验证成功的回调
+    const handleTurnstileSuccess = (e) => {
+        const token = e.detail;
+        setTurnstileToken(token);
+    };
 
     const fetchRemainApiCount = async () => {
         const response = await fetch('/api/remains');
@@ -47,12 +64,32 @@ export default function Downloader({ params: { locale } }) {
 
     let retryTimes = 0;
     const fetchTweet = async (url) => {
+        setIsLoading(true);
+
         const tweet_id = url.match(/status\/(\d{19})/)?.[1] || url.split('/').pop();
-        const response = await fetch(`/api/requestx?tweet_id=${tweet_id}`);
+        const response = await fetch(`/api/requestx?tweet_id=${tweet_id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-turnstile-token': turnstileToken
+            }
+        });
         const data = await response.json();
         
 
         if(!data.success){
+            if(data.error_code===1003){
+                resetTurnstile();
+                setIsLoading(false);
+                addToast({
+                    title: t('Please verify you are human'),
+                    color: 'danger',
+                    hideCloseButton: true,
+                    shouldShowTimeoutProgress: true,
+                    variant: 'bordered',
+                });
+                return;
+            }
             // 如果请求失败,最多重试3次
             // 每次重试的间隔时间需要随机在 1000-1500ms 之间
             if(retryTimes < 3){
@@ -64,6 +101,7 @@ export default function Downloader({ params: { locale } }) {
             }else{
                 retryTimes = 0;
                 setIsLoading(false);
+                resetTurnstile();
             }
             return;
         }
@@ -85,11 +123,31 @@ export default function Downloader({ params: { locale } }) {
             }
         });
         setTweets(tempTweets);
-        console.log(tempTweets);
 
         fetchRemainApiCount();
 
         router.replace(`/downloader?url=${url}`);
+
+        // 滚动到指定位置，向下偏移100px
+        setTimeout(() => {
+            const element = document.getElementById('tweet-editor');
+            if (element) {
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                    top: elementPosition - 80, // 向下偏移80px
+                    behavior: 'smooth'
+                });
+            }
+        }, 200);
+
+        resetTurnstile();
+    }
+
+    const resetTurnstile = () => {
+        if (typeof window !== 'undefined' && window.turnstile && turnstileRef.current) {
+            window.turnstile.reset(turnstileRef.current);
+            setTurnstileToken(''); // 清空 token，准备下次使用
+        }
     }
 
     const translateTweet = async (targetLang) => {
@@ -179,67 +237,37 @@ export default function Downloader({ params: { locale } }) {
         setTweets(tempTweets);
     }    
 
+    const handlePasteMedia = (index, dataUrl, file) => {
+        if (tweets[index].tweet_media.length >= 4) return;
+        const next = [...tweets];
+        next[index].tweet_media.push(dataUrl);
+        next[index].medias_info.push({ type: file?.type || 'image' });
+        setTweets(next);
+    };
+
     const handleDownloadAllMedia = async () => {
         if(isPackaging) return;
         setIsPackaging(true);
-        await downloadAllMedia();
+        await Utils.downloadAllMedia(tweets);
         setIsPackaging(false);
-    }
-
-    const downloadAllMedia = async () => {
-        const zip = new JSZip();
-        // 先创建一个文件夹
-        const folder = zip.folder('medias_from_twitterxdownload');
-        const tempTweets = [...tweets];
-        for(let i = 0; i < tempTweets.length; i++){
-            const tweet = tempTweets[i];
-            for(let j = 0; j < tweet.tweet_media.length; j++){
-                const media = tweet.tweet_media[j];
-                const {blob, filename} = await fetchMedia(media);
-                folder.file(filename, blob);
-            }
-        }
-        // 添加.URL文件和.webloc文件
-        folder.file('download_more.URL', 'https://twitterxdownload.com/');
-        folder.file('download_more.webloc', '<dict><key>URL</key><string>https://twitterxdownload.com/</string></dict>');
-
-        // 最后生成zip文件
-        const content = await zip.generateAsync({type: 'blob'});
-        const url = window.URL.createObjectURL(content);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'medias_from_twitterxdownload.zip';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    }
-
-    const fetchMedia = async (media) => {
-        try {
-            const response = await fetch(media, {
-                mode: 'cors',
-                cache: 'no-cache'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const blob = await response.blob();
-            return {
-                blob: blob,
-                filename: media.split('/').pop().split('?')[0] || 'downloaded_media'
-            };
-        } catch (error) {
-            console.error('Error fetching media:', error);
-            return null;
-        }
     }
 
     return (
         <div className="page-container">
+            {/* 加载 Turnstile 脚本 */}
+            <Script
+                src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+                strategy="lazyOnload"
+            />
+
+            {/* 全局回调函数 */}
+            <Script id="turnstile-callback">
+                {`
+                    window.onTurnstileSuccess = function(token) {
+                        window.dispatchEvent(new CustomEvent('turnstile-success', { detail: token }));
+                    }
+                `}
+            </Script>
             <Drawer isOpen={isOpen} isDismissable={false} hideCloseButton={true} size="md" radius="none" onOpenChange={onOpenChange}>
                 <DrawerContent>
                     <DrawerHeader>
@@ -261,15 +289,22 @@ export default function Downloader({ params: { locale } }) {
                         downloadButtonIsLoading={isLoading}
                         remainApiCount={remainApiCount}
                         url={url}
+                        isFetchMode={true}
                         onDownload={(url) => {
-                            setIsLoading(true);
                             fetchTweet(url);
                         }}
+                    />
+                    <div
+                        ref={turnstileRef}
+                        className="cf-turnstile w-fit mx-auto h-[65px] overflow-hidden mb-3"
+                        data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                        data-callback="onTurnstileSuccess"
+                        data-theme="light"
                     />
                 </div>
                 <div></div>
             </div>
-            <div className="flex gap-4 justify-center items-start">
+            <div id="tweet-editor" className="flex gap-4 justify-center items-start">
                 { tweetData && originTweets.length > 0 && (
                     <>
                         <div className="w-1/3 md:block hidden box-border border-foreground/10 border-[1px] rounded-2xl p-8 bg-[#f8f8f8] dark:bg-foreground/5">
@@ -293,7 +328,7 @@ export default function Downloader({ params: { locale } }) {
                                 ))}
                             </div>
                             <div className="w-full flex justify-center items-center">
-                                <Button onPress={handleDownloadAllMedia} size="sm" radius="full" color="primary" className="mt-3" isLoading={isPackaging}>{t('Download All')}</Button>
+                                <Button onPress={handleDownloadAllMedia} size="md" radius="full" color="primary" className="mt-3" isLoading={isPackaging} startContent={<RiDownloadLine className='w-4 h-4'/>}>{t('Download All')}</Button>
                             </div>
                         </div>
                         <div className="w-full box-border border-foreground/10 border-[1px] rounded-2xl p-8 bg-[#f8f8f8] dark:bg-foreground/5">
@@ -322,7 +357,7 @@ export default function Downloader({ params: { locale } }) {
                             <div className="w-full h-[1px] bg-foreground/10 mt-3"/>
                             <div className="w-full mt-3">
                                 {tweets.map((tweet, index) => {
-                                    return <TweetCard key={index} tweet={tweet} locale={locale} enableEdit={true} onDeleteTweet={() => handleDeleteTweet(index)} onInsertTweet={() => handleInsertTweet(index)} onAddMedia={() => handleAddMedia(index)} onDeleteMedia={(mediaIndex) => handleDeleteMedia(index, mediaIndex)} onUpdateText={(text) => handleUpdateText(index, text)} className="mb-2 cursor-auto select-text"/>
+                                    return <TweetCard key={index} tweet={tweet} locale={locale} enableEdit={true} onDeleteTweet={() => handleDeleteTweet(index)} onInsertTweet={() => handleInsertTweet(index)} onAddMedia={() => handleAddMedia(index)} onDeleteMedia={(mediaIndex) => handleDeleteMedia(index, mediaIndex)} onUpdateText={(text) => handleUpdateText(index, text)} onPasteImage={(dataUrl, file) => handlePasteMedia(index, dataUrl, file)} className="mb-2 cursor-auto select-text"/>
                                 })}
                             </div>
                         </div>

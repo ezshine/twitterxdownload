@@ -15,9 +15,7 @@ export default function HotCreators({ locale = 'en' }) {
     
     useEffect(() => {
         const fetchCreators = async () => {
-            const creatorsResp = await fetch(`/api/requestdb?action=creators`,{
-                cache: 'no-store'
-            });
+            const creatorsResp = await fetch(`/api/requestdb?action=creators`);
             const creatorsData = await creatorsResp.json();
             setCreators(creatorsData.data||[]);
             setCount(creatorsData.count||0);
@@ -79,6 +77,9 @@ export default function HotCreators({ locale = 'en' }) {
                         className="select-none box-border border-foreground/10 border-[1px] min-w-[160px] max-w-[20%] p-2 flex-shrink-0"
                         radius="lg"
                         key={creator.screen_name}
+                        as={Link}
+                        href={`/creators/${creator.screen_name}`}
+                        target="blank"
                     >
                         <CardHeader className="justify-between gap-5">
                             <Avatar
@@ -93,19 +94,6 @@ export default function HotCreators({ locale = 'en' }) {
                                 <h5 className="w-full text-small tracking-tight text-default-400 text-ellipsis overflow-hidden whitespace-nowrap">@{creator.screen_name}</h5>
                             </div>
                         </CardHeader>
-                        <CardFooter className="justify-between before:bg-white/10 overflow-hidden w-[calc(100%_-_8px)]">
-                            
-                                <Button
-                                    className="text-tiny text-white m-auto w-[100px]"
-                                    color="primary"
-                                    radius="full"
-                                    size="sm"
-                                    as={Link}
-                                    href={`/tweets?screen_name=${creator.screen_name}`}
-                                >
-                                    {t('Search')}
-                                </Button>
-                        </CardFooter>
                     </Card>
                 ))}
             </ScrollShadow>

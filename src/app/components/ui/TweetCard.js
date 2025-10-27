@@ -1,19 +1,29 @@
 'use client';
 import { Card, CardHeader, CardBody, CardFooter, Avatar,Chip,Button,Dropdown, DropdownTrigger, DropdownMenu, DropdownItem,Input,ToastProvider,addToast } from "@heroui/react";
 import { useState } from "react";
-import { RiCloseCircleFill,RiArrowDropDownLine,RiMoreFill } from "@remixicon/react"
+import { RiCloseCircleFill,RiArrowDropDownLine,RiMoreFill,RiStarLine,RiStarFill,RiBookmarkLine,RiBookmark3Fill } from "@remixicon/react"
 import { getTranslation } from "@/lib/i18n";
 import ConfirmModal from "./ConfirmModal";
 import Link from "next/link";
 
-export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,locale='en', className,onDeleteTweet,onInsertTweet,onAddMedia,onDeleteMedia,onUpdateText }) {
+const getLocalStorageItem = function(key){
+    if(typeof window == 'undefined')return '';
+    return localStorage.getItem(key);
+}
+
+const setLocalStorageItem = function(key,value){
+    if(typeof window == 'undefined')return;
+    localStorage.setItem(key,value);
+}
+
+export default function TweetCard({ tweet,isFavorite=false,videoPreview=true,enableEdit = false,locale='en', className,onDeleteTweet,onInsertTweet,onAddMedia,onDeleteMedia,onUpdateText,onFavorite,onPasteImage }) {
     
     const t = function (key) {
         return getTranslation(locale, key);
     }
 
     const [textLength, setTextLength] = useState(tweet.tweet_text.length);
-    const [savedPwd, setSavedPwd] = useState(localStorage.getItem('adminpwd') || '');
+    const [savedPwd, setSavedPwd] = useState(getLocalStorageItem('adminpwd') || '');
 
     const getMediaDom = (mediaUrl) => {
         if (mediaUrl.includes('.mp4') || mediaUrl.startsWith('data:video/mp4')) {
@@ -41,6 +51,10 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
     const handleUpdateText = (text) => {
         if(onUpdateText) onUpdateText(text);
     }
+    const handleFavorite = () => {
+        console.log('handleFavorite');
+        if(onFavorite) onFavorite();
+    }
     const handleActions = async (e) => {
         const passwordInputRef = { current: savedPwd };
         if(e === 'hidetweet'){
@@ -63,7 +77,7 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                         description: t('This tweet will be hidden on homepage'),
                         color: 'success'
                     });
-                    localStorage.setItem('adminpwd', passwordInputRef.current.trim());
+                    setLocalStorageItem('adminpwd', passwordInputRef.current.trim());
                     setSavedPwd(passwordInputRef.current.trim());
                 }else{
                     addToast({
@@ -91,7 +105,7 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                         description: t('This tweet will be shown on homepage'),
                         color: 'success'
                     });
-                    localStorage.setItem('adminpwd', passwordInputRef.current.trim());
+                    setLocalStorageItem('adminpwd', passwordInputRef.current.trim());
                     setSavedPwd(passwordInputRef.current.trim());
                 }else{
                     addToast({
@@ -119,7 +133,7 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                         description: t('This tweet will be deleted from database'),
                         color: 'success'
                     });
-                    localStorage.setItem('adminpwd', passwordInputRef.current.trim());
+                    setLocalStorageItem('adminpwd', passwordInputRef.current.trim());
                     setSavedPwd(passwordInputRef.current.trim());
                 }else{
                     addToast({
@@ -147,7 +161,7 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                         description: t('All tweets from this account will be hidden on homepage'),
                         color: 'success'
                     });
-                    localStorage.setItem('adminpwd', passwordInputRef.current.trim());
+                    setLocalStorageItem('adminpwd', passwordInputRef.current.trim());
                     setSavedPwd(passwordInputRef.current.trim());
                 }else{
                     addToast({
@@ -167,23 +181,26 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                 disableRipple={true}
                 className={`tweet-card w-full p-2 cursor-pointer select-none border-foreground/10 border-[1px] rounded-2xl ${className}`}
                 key={tweet.tweet_id}>
-                <CardHeader as={!enableEdit ? Link : 'div'}
-                href={`/tweets/${tweet.tweet_id}`} target="_blank" className="flex justify-between gap-4">
-                    <Avatar
-                        className="flex-shrink-0"
-                        isBordered
-                        radius="full"
-                        size="md"
-                        alt={`${tweet.name} avatar`}
-                        src={tweet.profile_image}
-                    />
-                    <div className="flex-1 flex flex-col pt-1 items-start text-left overflow-hidden">
-                        <h4 className="w-full text-small font-semibold leading-none text-default-600 overflow-hidden text-ellipsis whitespace-nowrap">{tweet.name}</h4>
-                        <h5 className="w-full text-small tracking-tight text-default-400 overflow-hidden text-ellipsis whitespace-nowrap">@{tweet.screen_name}</h5>
+                <CardHeader className="flex justify-between gap-4">
+                    <Link href={enableEdit?'#':`/creators/${tweet.screen_name}`} className='w-full flex flex-row gap-4'>
+                        <Avatar
+                            className="flex-shrink-0"
+                            isBordered
+                            radius="full"
+                            size="md"
+                            alt={`${tweet.name} avatar`}
+                            src={tweet.profile_image}
+                        />
+                        <div className="flex-1 flex flex-col pt-1 items-start text-left overflow-hidden">
+                            <h4 className="w-full text-small font-semibold leading-none text-default-600 overflow-hidden text-ellipsis whitespace-nowrap">{tweet.name}</h4>
+                            <h5 className="w-full text-small tracking-tight text-default-400 overflow-hidden text-ellipsis whitespace-nowrap">@{tweet.screen_name}</h5>
+                        </div>
+                    </Link>
+                    {!enableEdit && <>
+                    <div onClick={() => handleFavorite()} className="absolute top-[2px] right-[2px] cursor-pointer group p-6 bg-transparent">
+                        {isFavorite? <RiStarFill className="w-4 h-4 text-primary  transition-all duration-300 group-hover:translate-y-[-15px] translate-y-[-10px] translate-x-[10px]"/> : <RiStarLine className="w-4 h-4 text-foreground/10 transition-all duration-300 group-hover:translate-y-[-15px] translate-y-[-10px] translate-x-[10px]"/>}
                     </div>
-                    {tweet.tweet_threadscount > 0 && <div>
-                            <Chip color="default" variant="flat" size="sm" className="flex items-center gap-1 pl-2" endContent={<RiArrowDropDownLine />}>{tweet.tweet_threadscount}</Chip>
-                        </div>}
+                    </>}
                 </CardHeader>
                 <CardBody as={!enableEdit ? Link : 'div'}
                 href={`/tweets/${tweet.tweet_id}`} target="_blank" className="text-small text-default-400 pb-0">
@@ -194,9 +211,36 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                         handleUpdateText(e.target.innerText);
                     }} 
                     onPaste={(e) => {
+                        if (!enableEdit) return;
+                        const clipboard = e.clipboardData;
+                        const items = Array.from(clipboard?.items ?? []);
+                        const imageItems = items.filter((item) => item.type?.startsWith('image/'));
+
+                        if (imageItems.length) {
                         e.preventDefault();
-                        const text = e.clipboardData.getData('text/plain');
-                        document.execCommand('insertText', false, text);
+                        imageItems.forEach((item) => {
+                            const file = item.getAsFile();
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (evt) => {
+                            const dataUrl = evt.target?.result;
+                            if (dataUrl) {
+                                onPasteImage?.(dataUrl, file);
+                                if (typeof window !== 'undefined') {
+                                    window.dispatchEvent(new CustomEvent('tweetcard:paste-image', {
+                                        detail: { dataUrl, file }
+                                    }));
+                                }
+                            }
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                        return;
+                        }
+
+                        e.preventDefault();
+                        const text = clipboard?.getData('text/plain');
+                        if (text) document.execCommand('insertText', false, text);
                     }}
                     suppressContentEditableWarning={true}>{tweet.tweet_text}</pre>
                     {enableEdit && <div className='text-small text-default-400 text-right'>{textLength} / 280</div>}
@@ -283,7 +327,7 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                 </CardBody>
                 <CardFooter className="py-0">
                 {!enableEdit && <div className='text-small text-default-400 w-full flex justify-between items-center mt-1'>
-                        <div>
+                        <div className="flex-1 text-left">
                             {tweet.post_at && !enableEdit && <Chip color="default" variant="light" size="sm" className="text-foreground/50">
                             {new Date(tweet.post_at).toLocaleDateString('zh-CN', {
                                 year: 'numeric',
@@ -294,6 +338,9 @@ export default function TweetCard({ tweet,videoPreview=true,enableEdit = false,l
                             })}
                             </Chip>}
                         </div>
+                        {tweet.tweet_threadscount > 0 && <div className="text-foreground/20 flex items-center mr-2">
+                            <RiArrowDropDownLine />{tweet.tweet_threadscount}
+                        </div>}
                         {process.env.NEXT_PUBLIC_USE_SHARED_DB!='1' && <div>
                             <Dropdown>
                                 <DropdownTrigger>

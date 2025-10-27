@@ -1,10 +1,10 @@
 'use client';
 
 import { Button } from "@heroui/react";
-import { RiFileCopyLine,RiTwitterXLine,RiFacebookFill,RiRedditLine } from "@remixicon/react";
+import { RiDownloadLine,RiFileCopyLine,RiTwitterXLine,RiFacebookFill,RiRedditLine } from "@remixicon/react";
+import Utils from "@/lib/utils"
 
-
-export default function ShareButtons() {
+export default function ShareButtons({tweets=[]}) {
 
     const handleCopy = () => {
         const articleContent = document.querySelector('.article-content');
@@ -30,21 +30,26 @@ export default function ShareButtons() {
         const url = encodeURIComponent(window.location.href);
         window.open(`https://www.reddit.com/submit?url=${url}`, '_blank');
     }
-
+    const handleDownloadAll = () =>{
+        Utils.downloadAllMedia(tweets);
+    }
 
     return (
-        <div className="flex flex-row gap-2 mt-6 justify-between">
+        <div className="flex flex-row gap-1 mt-6 justify-between">
             <Button isIconOnly color="primary" size="md" title="Copy" aria-label="Copy" onPress={handleCopy}>
-                <RiFileCopyLine />
+                <RiFileCopyLine className="w-5 h-5"/>
+            </Button>
+            <Button isIconOnly color="primary" size="md" title="Download All" aria-label="Download All" onPress={handleDownloadAll}>
+                <RiDownloadLine className="w-5 h-5"/>
             </Button>
             <Button isIconOnly color="primary" size="md" title="Share to Twitter" aria-label="Share to Twitter" onPress={handleShareToTwitter}>
-                <RiTwitterXLine />
+                <RiTwitterXLine className="w-5 h-5"/>
             </Button>
             <Button isIconOnly color="primary" size="md" title="Share to Facebook" aria-label="Share to Facebook" onPress={handleShareToFacebook}>
-                <RiFacebookFill />
+                <RiFacebookFill className="w-5 h-5"/>
             </Button>
             <Button isIconOnly color="primary" size="md" title="Share to Reddit" aria-label="Share to Reddit" onPress={handleShareToReddit}>
-                <RiRedditLine />
+                <RiRedditLine className="w-5 h-5"/>
             </Button>
         </div>
     )

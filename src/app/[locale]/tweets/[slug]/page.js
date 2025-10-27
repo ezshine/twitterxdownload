@@ -1,6 +1,5 @@
 import { getTranslation } from "@/lib/i18n";
-import { Avatar, Button } from "@heroui/react";
-import Link from "next/link";
+import { Avatar, Button,Link } from "@heroui/react";
 import { parseTweetData } from "@/lib/parser";
 import ShareButtons from "@/app/components/ui/ShareButtons";
 import Explore from "@/app/components/ui/Explore";
@@ -94,8 +93,20 @@ export default async function TweetDetail({params}) {
         return text;
     }
 
+    const tweets = parseTweetData(JSON.parse(tweet.tweet_data));
+
+    const tempTweets = tweets.map((tweet) => {
+        return {
+            name: "name",
+            screen_name: "screen_name",
+            profile_image: "",
+            tweet_text: tweet.text,
+            tweet_media: tweet.medias.map((media) => media.url),
+            medias_info: tweet.medias
+        }
+    });
+
     const getHTML = () =>{
-        const tweets = parseTweetData(JSON.parse(tweet.tweet_data));
         
         return (
             <div 
@@ -103,13 +114,13 @@ export default async function TweetDetail({params}) {
             >
                 {tweets.map((tweet, index) => (
                     <>
-                        <pre dangerouslySetInnerHTML={{__html: linkConvert(tweet.text)}}></pre>
+                        <pre key={'tweet-'+index} dangerouslySetInnerHTML={{__html: linkConvert(tweet.text)}}></pre>
                         { 
                             tweet.medias.map((media, index) => {
                                 if(media.type==="photo"){
-                                    return <img src={media.url} alt={media.alt} />
+                                    return <img key={'img-'+index} src={media.url} alt={media.alt} />
                                 }else if(media.type==="video"){
-                                    return <video controls src={media.url} alt={media.alt} />
+                                    return <video key={'video-'+index} controls src={media.url} alt={media.alt} />
                                 }
                             })
                         }
@@ -123,17 +134,21 @@ export default async function TweetDetail({params}) {
         <div className="page-container flex flex-row gap-6 p-4 mt-4 flex-wrap md:flex-nowrap w-full">
             <div className="flex flex-col flex-1 gap-4 box-border border-foreground/10 border-[1px] rounded-2xl p-8 bg-[#f8f8f8] dark:bg-foreground/5">
                 <div className="flex gap-4">
-                    <div className="box-border flex-shrink-0 p-1">
-                        <Avatar disableAnimation isBordered src={tweet.profile_image} alt={`${tweet.name} avatar`} size="lg" radius="full"/>
-                    </div>
-                    <div className="flex flex-col gap-1 pt-3 flex-1 overflow-hidden">
-                        <h1 className="text-medium font-semibold leading-none text-default-600 overflow-hidden text-ellipsis whitespace-nowrap">{tweet.name}</h1>
-                        <p className="text-small text-default-400 overflow-hidden text-ellipsis whitespace-nowrap">@{tweet.screen_name}</p>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-2 items-end">
-                        <Button color="primary" size="sm" radius="full" asChild>
-                            <Link href={`https://x.com/${tweet.screen_name}/status/${tweet.tweet_id}`} target="_blank">{t('Goto Tweet')}</Link>
-                        </Button>
+                    <Link href={`/creators/${tweet.screen_name}`} className='w-full flex gap-4'>
+                        <div className="box-border flex-shrink-0 p-1">
+                            <Avatar disableAnimation isBordered src={tweet.profile_image||''} alt={`${tweet.name} avatar`} size="lg" radius="full"/>
+                        </div>
+                        <div className="flex flex-col gap-1 pt-3 flex-1 overflow-hidden">
+                            <h1 className="text-medium font-semibold leading-none text-default-600 overflow-hidden text-ellipsis whitespace-nowrap">{tweet.name}</h1>
+                            <p className="text-small text-default-400 overflow-hidden text-ellipsis whitespace-nowrap">@{tweet.screen_name}</p>
+                        </div>
+                    </Link>
+                    <div className="flex-shrink-0 flex flex-col gap-2 pt-2 items-end">
+                        <Link href={`https://x.com/${tweet.screen_name}/status/${tweet.tweet_id}`} target="_blank">
+                            <Button color="primary" size="sm" radius="full">
+                                {t('Goto Tweet')}
+                            </Button>
+                        </Link>
                         <p className="text-small text-default-400">
                             {new Date(tweet.post_at).toLocaleString()}
                         </p>
@@ -145,10 +160,15 @@ export default async function TweetDetail({params}) {
                 </div>
             </div>
             <div className="flex flex-col gap-6 w-full md:w-[300px] flex-shrink-0 box-border">
+                <Link href={`/downloader?url=${encodeURIComponent('https://x.com/'+tweet.screen_name+'/status/'+tweet.tweet_id)}`} className="w-full">
+                    <Button variant="solid" color="primary" size="lg" radius="full" className="w-full">
+                        {t('Re-Publish')}
+                    </Button>
+                </Link>
                 <div className="border-foreground/10 border-[1px] rounded-2xl p-8 bg-[#f8f8f8] dark:bg-foreground/5">
                     <div className="text-medium font-semibold">{t('Share')}</div>
                     <div className="w-full h-[1px] bg-foreground/10 mt-3"></div>
-                    <ShareButtons />
+                    <ShareButtons tweets={tempTweets}/>
                 </div>
                 <Explore locale={locale}/>
             </div>

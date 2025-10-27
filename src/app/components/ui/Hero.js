@@ -4,6 +4,7 @@ import { Button, addToast } from '@heroui/react';
 import { RiDownloadLine } from '@remixicon/react';
 import { useRef } from 'react';
 
+
 export default function Hero({ locale = 'en', 
     downloadButtonLabel = 'Download', 
     downloadButtonIsLoading = false,
@@ -11,11 +12,44 @@ export default function Hero({ locale = 'en',
     onDownload = (url) => {}, 
     url = 'https://x.com/elonmusk/status/1853948745521439079'
 }) {
+
     const t = function (key) {
         return getTranslation(locale, key);
     }
 
     const inputRef = useRef(null);
+
+    const handleDownload = () => {
+        // 从inputRef中获取
+        const text = inputRef.current.value.trim();
+
+        // 校验URL格式
+        const twitterUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/status\/\d+/;
+
+        if (!text) {
+            addToast({
+                title: t('Please enter a twitter status url'),
+                color: 'danger',
+                hideCloseButton: true,
+                shouldShowTimeoutProgress: true,
+                variant: 'bordered',
+            });
+            return;
+        }
+
+        if (!twitterUrlPattern.test(text)) {
+            addToast({
+                title: t('Invalid twitter status url format'),
+                color: 'danger',
+                hideCloseButton: true,
+                shouldShowTimeoutProgress: true,
+                variant: 'bordered',
+            });
+            return;
+        }
+
+        onDownload(text);
+    }
 
     return (
         <>
@@ -50,40 +84,10 @@ export default function Hero({ locale = 'en',
                         </Button>
                     </div>
                     <Button
-                        onPress={() => {
-                            // 从inputRef中获取
-                            const text = inputRef.current.value.trim();
-
-                            // 校验URL格式
-                            const twitterUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/status\/\d+/;
-
-                            if (!text) {
-                                addToast({
-                                    title: t('Please enter a twitter status url'),
-                                    color: 'danger',
-                                    hideCloseButton: true,
-                                    shouldShowTimeoutProgress: true,
-                                    variant: 'bordered',
-                                });
-                                return;
-                            }
-
-                            if (!twitterUrlPattern.test(text)) {
-                                addToast({
-                                    title: t('Invalid twitter status url format'),
-                                    color: 'danger',
-                                    hideCloseButton: true,
-                                    shouldShowTimeoutProgress: true,
-                                    variant: 'bordered',
-                                });
-                                return;
-                            }
-
-                            onDownload(text);
-                        }}
+                        onPress={handleDownload}
                         isLoading={downloadButtonIsLoading}
                         spinnerPlacement="end"
-                        startContent={<RiDownloadLine />}
+                        startContent={<RiDownloadLine className='w-5 h-5'/>}
                         color="primary" className="text-lg py-6 px-20 rounded-full mb-3" >
                         {t(downloadButtonLabel)}
                     </Button>
