@@ -91,8 +91,8 @@ export default function Hero({ locale = 'en',
                         color="primary" className="text-lg py-6 px-20 rounded-full mb-3" >
                         {t(downloadButtonLabel)}
                     </Button>
-                    <p className="text-gray-500 text-sm">
-                        {t('API Status: ')} {remainApiCount}
+                    <p className="text-foreground/20 text-sm">
+                        {t('API Remains: ')} {remainApiCount}
                     </p>
                 </div>
             </div>

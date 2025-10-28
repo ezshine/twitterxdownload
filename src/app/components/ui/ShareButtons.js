@@ -3,6 +3,7 @@
 import { Button } from "@heroui/react";
 import { RiDownloadLine,RiFileCopyLine,RiTwitterXLine,RiFacebookFill,RiRedditLine } from "@remixicon/react";
 import Utils from "@/lib/utils"
+import { autoTranslation as t } from "@/lib/i18n";
 
 export default function ShareButtons({tweets=[]}) {
 
@@ -17,6 +18,14 @@ export default function ShareButtons({tweets=[]}) {
             e.preventDefault();
         });
         document.execCommand('copy');
+
+        addToast({
+            title: t('Copied'),
+            color: 'success',
+            hideCloseButton: true,
+            shouldShowTimeoutProgress: true,
+            variant: 'bordered',
+        });
     }
     const handleShareToTwitter = () => {
         const url = encodeURIComponent(window.location.href);

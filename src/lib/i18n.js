@@ -66,16 +66,34 @@ export function getLocale(locale) {
   return locales[locale] || locales.en;
 }
 
-export function getTranslation(locale, key) {
+export function findLocaleFromPathname(){
+  if(typeof window === 'undefined') return 'en';
+  const pathname = window.location.pathname;
+  const locale = Object.keys(locales).find(locale => pathname.startsWith(`/${locale}`));
+  return locale || 'en';
+}
+
+export function autoTranslation(key,...args){
+  const locale = findLocaleFromPathname();
+  return getTranslation(locale, key,args);
+}
+
+export function getTranslation(locale, key,...args) {
   const localeData = getLocale(locale);
   
   // 直接访问键，不再使用 split
-  const result = localeData.locales[key];
+  let result = localeData.locales[key];
   
   if (result === undefined) {
     console.log(`Translation not found for key: ${key} in locale: ${locale}`);
     return key;
   }
+
+  args.forEach((arg, index) => {
+    const placeholder = `$${index + 1}`;
+    result = result.replace(new RegExp('\\' + placeholder, 'g'), arg);
+  });
+
   return result;
 }
 
