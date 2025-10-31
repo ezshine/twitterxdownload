@@ -294,13 +294,13 @@ export default function Downloader({ params: { locale } }) {
                             fetchTweet(url);
                         }}
                     />
-                    <div
+                    {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && <div
                         ref={turnstileRef}
                         className="cf-turnstile w-fit mx-auto h-[65px] overflow-hidden mb-3"
                         data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                         data-callback="onTurnstileSuccess"
                         data-theme="light"
-                    />
+                    />}
                 </div>
                 <div></div>
             </div>

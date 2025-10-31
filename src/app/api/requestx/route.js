@@ -30,18 +30,20 @@ async function verifyTurnstileToken(token) {
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
 
-    // 1. 获取 Turnstile token
-    const turnstileToken = request.headers.get('x-turnstile-token');
-    
-    // 2. 验证 Turnstile token
-    const verification = await verifyTurnstileToken(turnstileToken);
-    
-    if (!verification.success) {
-        return Response.json({
-            success: false,
-            error: 'Security verification failed. Please refresh and try again.',
-            error_code: 1003
-        });
+    if(process.env.TURNSTILE_SECRET_KEY){
+        // 1. 获取 Turnstile token
+        const turnstileToken = request.headers.get('x-turnstile-token');
+        
+        // 2. 验证 Turnstile token
+        const verification = await verifyTurnstileToken(turnstileToken);
+        
+        if (!verification.success) {
+            return Response.json({
+                success: false,
+                error: 'Security verification failed. Please refresh and try again.',
+                error_code: 1003
+            });
+        }
     }
 
     const response = await fetch(`https://twitterxdownload.com/api/requestx?${searchParams.toString()}`, {
