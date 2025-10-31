@@ -57,7 +57,9 @@ export default function Downloader({ params: { locale } }) {
     };
 
     const fetchRemainApiCount = async () => {
-        const response = await fetch('/api/remains');
+        const response = await fetch('/api/remains',{
+            cache:"no-store"
+        });
         const data = await response.json();
         setRemainApiCount(data.data);
     }

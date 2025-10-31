@@ -2,6 +2,7 @@ export async function GET() {
   try {
     const response = await fetch('https://twitterxdownload.com/api/remains', {
       method: 'GET',
+      cache:"no-store",
       headers: {
         'x-api-key': `${process.env.API_KEY}`
       }
